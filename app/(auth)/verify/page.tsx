@@ -56,9 +56,7 @@ const VerifyContent = () => {
     setLoading(true);
     try {
       // 2. Pass 'role' to verifyOtp so it calls /api/entertainer/verify-otp or /api/bar/verify-otp
-      const result = await authService.verifyOtp(role, email, otpString);
-      
-      console.log("Success:", result.message);
+      await authService.verifyOtp(role, email, otpString);
       router.push('/login');
     } catch (err: any) {
       console.error("Verification Error Detail:", err);
@@ -99,7 +97,7 @@ const VerifyContent = () => {
 
           <div className="text-center space-y-2">
             <p className="text-gray-300 text-sm">
-              Didn't receive a code?{' '}
+              Didn&apos;t receive a code?{' '}
               <button 
                 type="button" 
                 className={`${timer === 0 ? 'text-black font-medium hover:underline' : 'text-gray-300 cursor-not-allowed'}`}

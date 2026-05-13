@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { Star, CheckCircle, MapPin, Music, DollarSign, MessageSquare } from 'lucide-react';
 import { BookingModal } from './BookingModal';
 
+const DetailItem = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
+  <div className="flex items-start gap-3 text-sm text-gray-700">
+    <div className="w-4 h-4 flex items-center justify-center mt-0.5 text-gray-500">
+      {icon}
+    </div>
+    <div className="flex-1">{children}</div>
+  </div>
+);
+
 export const EntertainerCard = ({
   _id,
   stageName,
@@ -17,15 +26,6 @@ export const EntertainerCard = ({
   latestComment,
 }: any) => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-
-  const Item = ({ icon, children }: any) => (
-    <div className="flex items-start gap-3 text-sm text-gray-700">
-      <div className="w-4 h-4 flex items-center justify-center mt-0.5 text-gray-500">
-        {icon}
-      </div>
-      <div className="flex-1">{children}</div>
-    </div>
-  );
 
   return (
     <>
@@ -50,16 +50,16 @@ export const EntertainerCard = ({
           </h3>
 
           <div className="space-y-1.5">
-            <Item icon={<Star size={13} />}>
+            <DetailItem icon={<Star size={13} />}>
               <span className="font-medium text-gray-900">{avgRating ?? '0.0'}</span>
               <span className="text-gray-500 ml-1">({reviewCount ?? 0} reviews)</span>
-            </Item>
-            <Item icon={<CheckCircle size={13} />}>{bookingCount ?? 0} Verified Booking</Item>
-            <Item icon={<Music size={13} />}>{genres?.length ? genres.join(', ') : 'No genres'}</Item>
-            <Item icon={<MapPin size={13} />}>{location || 'Unknown'}</Item>
-            <Item icon={<DollarSign size={13} />}>
+            </DetailItem>
+            <DetailItem icon={<CheckCircle size={13} />}>{bookingCount ?? 0} Verified Booking</DetailItem>
+            <DetailItem icon={<Music size={13} />}>{genres?.length ? genres.join(', ') : 'No genres'}</DetailItem>
+            <DetailItem icon={<MapPin size={13} />}>{location || 'Unknown'}</DetailItem>
+            <DetailItem icon={<DollarSign size={13} />}>
               Nu. {performanceFeeMin?.toLocaleString() || 0} – {performanceFeeMax?.toLocaleString() || 0}
-            </Item>
+            </DetailItem>
           </div>
 
           <div className="flex gap-3 text-sm text-gray-500 italic pt-1">

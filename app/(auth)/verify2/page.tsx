@@ -57,8 +57,6 @@ const Verify2Content = () => {
     try {
       // 2. Pass 'role' to verifyResetOtp
       const result = await authService.verifyResetOtp(role, email, otpString);
-      
-      console.log("OTP Verified. Reset Token received.");
 
       // 3. Pass 'role' forward to reset_password page
       router.push(`/reset_password?token=${encodeURIComponent(result.resetToken)}&role=${encodeURIComponent(role)}`);
@@ -78,7 +76,7 @@ const Verify2Content = () => {
       await authService.sendResetOtp(role, email);
       setTimer(59);
       alert("A new code has been sent to your email.");
-    } catch (err: any) {
+    } catch {
       alert("Failed to resend code.");
     }
   };
@@ -113,7 +111,7 @@ const Verify2Content = () => {
 
           <div className="text-center space-y-2">
             <p className="text-gray-300 text-sm">
-              Didn't receive a code?{' '}
+              Didn&apos;t receive a code?{' '}
               <button 
                 type="button" 
                 onClick={handleResend}

@@ -7,12 +7,6 @@ export default function DashboardGateway() {
   const router = useRouter();
 
   useEffect(() => {
-  console.log("ALL LOCAL STORAGE KEYS:", Object.keys(localStorage));
-  console.log("CONTENT OF 'state':", localStorage.getItem('state'));
-  console.log("CONTENT OF 'persist:root':", localStorage.getItem('persist:root'));
-}, []);
-
-  useEffect(() => {
     const role = authUtils.getRole();
 
     if (role === 'Entertainer') {
@@ -24,5 +18,9 @@ export default function DashboardGateway() {
     }
   }, [router]);
 
-  return <div>Loading dashboard...</div>;
+  return (
+    <div className="flex h-full items-center justify-center text-sm text-gray-500">
+      Loading dashboard...
+    </div>
+  );
 }

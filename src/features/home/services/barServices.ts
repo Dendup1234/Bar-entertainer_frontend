@@ -66,13 +66,6 @@ export const barService = {
         const token = useAuthStore.getState().token;
         const url = `${API_BASE_URL}${ENDPOINTS.UPLOADS.GET_SAS('bar')}`;
 
-        console.log('=== SAS URL DEBUG ===');
-        console.log('Full URL:', url);
-        console.log('Token exists:', !!token);
-        console.log('Token value:', token);
-        console.log('File type:', file.type);
-        console.log('File size:', file.size);
-
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -82,11 +75,7 @@ export const barService = {
             body: JSON.stringify({ mimeType: file.type, size: file.size }),
         });
 
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-
         const data = await response.json();
-        console.log('Response body:', data);
 
         if (!response.ok) throw new Error('Failed to get SAS URL');
         return data;

@@ -9,6 +9,26 @@ interface Props {
     onRefresh: () => void;
 }
 
+const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 0', borderBottom: '1px solid #f9fafb' }}>
+        <div style={{
+            width: '32px', height: '32px', borderRadius: '8px',
+            backgroundColor: '#f9fafb', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+            <span style={{ color: '#9ca3af' }}>{icon}</span>
+        </div>
+        <div>
+            <p style={{ margin: 0, fontSize: '10px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                {label}
+            </p>
+            <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#111827', fontWeight: 500 }}>
+                {value || '—'}
+            </p>
+        </div>
+    </div>
+);
+
 const formatDate = (d: string) => {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -33,8 +53,6 @@ export const EventDetailModal = ({ isOpen, onClose, event, onRefresh }: Props) =
 
     if (!isOpen || !event) return null;
 
-    console.log("EVENT MODAL DATA:", event); // ✅ DEBUG
-
     if (isEditing) {
         return (
             <EventForm
@@ -47,36 +65,7 @@ export const EventDetailModal = ({ isOpen, onClose, event, onRefresh }: Props) =
 
     const sc = statusColor(event.status);
 
-    const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 0', borderBottom: '1px solid #f9fafb' }}>
-            <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                backgroundColor: '#f9fafb', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-                <span style={{ color: '#9ca3af' }}>{icon}</span>
-            </div>
-            <div>
-                <p style={{ margin: 0, fontSize: '10px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                    {label}
-                </p>
-                <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#111827', fontWeight: 500 }}>
-                    {value || '—'}
-                </p>
-            </div>
-        </div>
-    );
-
-
-    const imageSrc = event.coverImage || event.bannerImageUrl ||
-
-
-        console.log("EVENT IMAGE DEBUG:", {
-            coverImage: event.coverImage,
-            bannerImageUrl: event.bannerImageUrl,
-            image: event.image,
-            banner: event.banner,
-        });
+    const imageSrc = event.coverImage || event.bannerImageUrl || event.image || event.banner || '';
 
     return (
         <div style={{
