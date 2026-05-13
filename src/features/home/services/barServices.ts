@@ -53,8 +53,38 @@ export const barService = {
         return await apiClient(endpoint, { method: 'DELETE' });
     },
 
+    generateReviewToken: async (id: string) => {
+        return await apiClient(ENDPOINTS.BAR.GENERATE_REVIEW_TOKEN(id), {
+            method: 'POST',
+        });
+    },
+    
+    regenerateReviewToken: async (id: string) => {
+        return await apiClient(ENDPOINTS.BAR.REGENERATE_REVIEW_TOKEN(id), {
+            method: 'POST',
+        });
+    },
+
     getAllBookings: async () => {
         return await apiClient(ENDPOINTS.BAR.GET_BOOKINGS);
+    },
+
+    // Fetches all applications (includes pending and accepted)
+    getApplications: async () => {
+        return await apiClient(ENDPOINTS.BAR.GET_APPLICATIONS);
+    },
+
+    // Fetches specifically the shortlisted candidates
+    getShortlistedApplications: async () => {
+        return await apiClient(ENDPOINTS.BAR.GET_SHORTLISTED);
+    },
+
+    // Updates status to move singer through the funnel
+    updateApplicationStatus: async (applicationId: string, status: 'shortlisted' | 'accepted' | 'rejected') => {
+        return await apiClient(ENDPOINTS.BAR.UPDATE_APPLICATION_STATUS(applicationId), {
+            method: 'PATCH',
+            body: JSON.stringify({ status }),
+        });
     },
 
     getBookingCounts: async () => await apiClient(ENDPOINTS.BAR.GET_BOOKING_COUNTS),

@@ -10,8 +10,8 @@ const statusStyle = (status: string): React.CSSProperties => {
   switch (status?.toLowerCase()) {
     case 'accepted': return { color: '#16a34a', fontWeight: 500 };
     case 'rejected': return { color: '#dc2626', fontWeight: 500 };
-    case 'pending':  return { color: '#d97706', fontWeight: 500 };
-    default:         return { color: '#6b7280', fontWeight: 500 };
+    case 'pending': return { color: '#d97706', fontWeight: 500 };
+    default: return { color: '#6b7280', fontWeight: 500 };
   }
 };
 
@@ -114,8 +114,14 @@ export const EntertainerBookingTable = ({ bookings, searchTerm, onRefresh }: Pro
 
               <td style={{ padding: '20px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <ActionBtn bookingId={b._id} status="accepted" label="Accept" />
-                  <ActionBtn bookingId={b._id} status="rejected" label="Reject" />
+                  {b.status?.toLowerCase() === 'pending' ? (
+                    <>
+                      <ActionBtn bookingId={b._id} status="accepted" label="Accept" />
+                      <ActionBtn bookingId={b._id} status="rejected" label="Reject" />
+                    </>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: '#d1d5db' }}>—</span>
+                  )}
                 </div>
               </td>
             </tr>

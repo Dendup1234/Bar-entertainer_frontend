@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Loader2 } from 'lucide-react';
+import { Filter, Loader2 } from 'lucide-react';
 import { BookingStatCard } from '../components/BookingStats';
 import { BookingTable } from '../components/BookingTable';
+import { SearchBar } from '../components/SearchBar';
 import { barService } from '@/features/home/services/barServices';
 
 export default function BookingsPage() {
@@ -20,6 +21,9 @@ export default function BookingsPage() {
         barService.getAllBookings(),
         barService.getBookingCounts(),
       ]);
+
+      console.log('BOOKINGS RES:', bookingsRes);
+      console.log('FIRST BOOKING:', bookingsRes?.bookings?.[0]);
 
       if (bookingsRes?.bookings) setBookings(bookingsRes.bookings);
       else if (Array.isArray(bookingsRes)) setBookings(bookingsRes);
@@ -53,50 +57,33 @@ export default function BookingsPage() {
 
         {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
-          <div style={{ position: 'relative', width: '340px' }}>
-            <Search
-              style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}
-              size={17}
-            />
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%', paddingLeft: '44px', paddingRight: '20px',
-                paddingTop: '12px', paddingBottom: '12px',
-                fontSize: '14px', backgroundColor: '#fff',
-                border: '1px solid #e5e7eb', borderRadius: '9999px',
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
+          <SearchBar
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Search bookings"
+          />
           <button style={{
             display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '12px 24px', backgroundColor: '#fff',
+            padding: '11px 22px', backgroundColor: '#fff',
             border: '1px solid #e5e7eb', borderRadius: '9999px',
-            fontSize: '14px', color: '#111827', cursor: 'pointer',
+            fontSize: '13px', color: '#111827', cursor: 'pointer',
           }}>
             <Filter size={16} /> Filter
           </button>
         </div>
 
         {/* Table */}
-        <div>
-          {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '128px 0' }}>
-              <Loader2 className="animate-spin" style={{ color: '#e5e7eb', marginBottom: '16px' }} size={48} />
-              <p style={{ color: '#9ca3af', fontSize: '16px' }}>Loading bookings...</p>
-            </div>
-          ) : (
-            <BookingTable
-              bookings={bookings}
-              searchTerm={searchTerm}
-            />
-          )}
-        </div>
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '128px 0' }}>
+            <Loader2 className="animate-spin" style={{ color: '#e5e7eb', marginBottom: '16px' }} size={48} />
+            <p style={{ color: '#9ca3af', fontSize: '16px' }}>Loading bookings...</p>
+          </div>
+        ) : (
+          <BookingTable
+            bookings={bookings}
+            searchTerm={searchTerm}
+          />
+        )}
 
       </div>
     </div>
