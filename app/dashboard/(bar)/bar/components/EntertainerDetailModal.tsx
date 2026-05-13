@@ -10,6 +10,43 @@ interface ModalProps {
   entertainerId: string | null;
 }
 
+const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string }) => (
+  <div style={{
+    display: 'flex', alignItems: 'flex-start', gap: '12px',
+    padding: '12px 0', borderBottom: '1px solid #f9fafb',
+  }}>
+    <div style={{
+      width: '32px', height: '32px', borderRadius: '8px',
+      backgroundColor: '#f9fafb', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    }}>
+      <span style={{ color: '#9ca3af' }}>{icon}</span>
+    </div>
+    <div>
+      <p style={{ margin: 0, fontSize: '10px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+        {label}
+      </p>
+      <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#111827', fontWeight: 500 }}>
+        {value || '—'}
+      </p>
+    </div>
+  </div>
+);
+
+const StatBox = ({ label, value, highlight }: { label: string; value: React.ReactNode; highlight?: boolean }) => (
+  <div style={{ textAlign: 'center', flex: 1 }}>
+    <p style={{
+      margin: 0, fontSize: '22px', fontWeight: 700,
+      color: highlight ? '#111827' : '#111827',
+    }}>
+      {value ?? 0}
+    </p>
+    <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#9ca3af', fontWeight: 500 }}>
+      {label}
+    </p>
+  </div>
+);
+
 export const EntertainerDetailModal = ({ isOpen, onClose, entertainerId }: ModalProps) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -25,43 +62,6 @@ export const EntertainerDetailModal = ({ isOpen, onClose, entertainerId }: Modal
   }, [isOpen, entertainerId]);
 
   if (!isOpen) return null;
-
-  const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-    <div style={{
-      display: 'flex', alignItems: 'flex-start', gap: '12px',
-      padding: '12px 0', borderBottom: '1px solid #f9fafb',
-    }}>
-      <div style={{
-        width: '32px', height: '32px', borderRadius: '8px',
-        backgroundColor: '#f9fafb', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}>
-        <span style={{ color: '#9ca3af' }}>{icon}</span>
-      </div>
-      <div>
-        <p style={{ margin: 0, fontSize: '10px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-          {label}
-        </p>
-        <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#111827', fontWeight: 500 }}>
-          {value || '—'}
-        </p>
-      </div>
-    </div>
-  );
-
-  const StatBox = ({ label, value, highlight }: { label: string; value: any; highlight?: boolean }) => (
-    <div style={{ textAlign: 'center', flex: 1 }}>
-      <p style={{
-        margin: 0, fontSize: '22px', fontWeight: 700,
-        color: highlight ? '#111827' : '#111827',
-      }}>
-        {value ?? 0}
-      </p>
-      <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#9ca3af', fontWeight: 500 }}>
-        {label}
-      </p>
-    </div>
-  );
 
   return (
     <div style={{

@@ -10,12 +10,6 @@ export const authService = {
 
   sendRegistrationOtp: async (role: UserRole, userData: any) => {
     const path = authService.getApiPath(role);
-    const url = ENDPOINTS.AUTH.SEND_OTP(path);
-    
-    console.log("DEBUGGING PATH:");
-    console.log("Selected Role:", role);
-    console.log("Generated Path:", path);
-    console.log("Final URL:", url);
     return await apiClient(ENDPOINTS.AUTH.SEND_OTP(path), {
       method: 'POST',
       body: JSON.stringify(userData),

@@ -43,12 +43,10 @@ const LoginPage = () => {
         authUtils.setRole(userType); 
         // ------------------------------------------------
 
-        console.log("Login Successful");
-
         // 3. Redirect to the Gateway
         router.push('/dashboard'); 
     } catch (err: any) {
-        // ... (rest of your error handling)
+        alert(err.message || 'Login failed. Please check your credentials.');
     } finally {
         setLoading(false);
     }
@@ -130,7 +128,7 @@ const LoginPage = () => {
         </form>
 
         <p className="text-center text-[14px] text-gray-500 pt-2">
-          Don't have an account? <Link href="/register" className="text-black font-semibold hover:underline transition-colors">Register</Link>
+          Don&apos;t have an account? <Link href="/register" className="text-black font-semibold hover:underline transition-colors">Register</Link>
         </p>
       </div>
     </div>
