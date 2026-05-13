@@ -22,11 +22,20 @@ export const ENDPOINTS = {
     GET_BOOKINGS: '/api/bar/bookings',
     CREATE_BOOKING: '/api/bar/bookings',
     SEARCH_BOOKINGS: '/api/bar/bookings/search/query',
+    GET_APPLICATIONS: '/api/bar/applications',
+    GET_SHORTLISTED: '/api/bar/applications/shortlisted',
+    UPDATE_APPLICATION_STATUS: (id: string) => `/api/bar/applications/${id}/status`,
+    GENERATE_REVIEW_TOKEN: (eventid: string) => `/api/bar/reviews/${eventid}/generate-token`,
+    REGENERATE_REVIEW_TOKEN: (eventid: string) => `/api/bar/reviews/${eventid}/regenerate-token`,
+    
   },
 
   ENTERTAINER: {
+    FETCH_EVENTS: '/api/entertainer/events',
+    APPLY_EVENT: (id: string) => `/api/entertainer/events/${id}/apply`,
     FETCH_BOOKINGS:'/api/entertainer/bookings',
     BOOKING_STATUS:(id:string) => `/api/entertainer/bookings/${id}/status`
+    
   },
 
   PROFILE: {

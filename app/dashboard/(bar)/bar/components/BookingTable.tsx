@@ -43,71 +43,78 @@ export const BookingTable = ({ bookings, searchTerm, onView }: Props) => {
           </tr>
         </thead>
         <tbody>
-          {filtered.map((b, i) => (
-            <tr
-              key={b._id || i}
-              onClick={() => onView?.(b)}
-              style={{ borderBottom: '1px solid #f9fafb', cursor: onView ? 'pointer' : 'default' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#fafafa')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <td style={{ padding: '20px 16px', fontSize: '11px', color: '#c0c8d4', fontFamily: 'monospace' }}>
-                {String(i + 1).padStart(2, '0')}
-              </td>
-
-              {/* Entertainer name */}
-              <td style={{ padding: '20px 16px', fontSize: '13px', fontWeight: 500, color: '#111827' }}>
-                {b.entertainer?.stageName || b.entertainer?.name || '—'}
-              </td>
-
-              {/* Entertainer type */}
-              <td style={{ padding: '20px 16px' }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  padding: '5px 14px', borderRadius: '9999px',
-                  fontSize: '12px', backgroundColor: '#f3f4f6', color: '#374151',
-                }}>
-                  {b.entertainer?.bio?.entertainerType || b.entertainerType || '—'}
-                </span>
-              </td>
-
-              {/* Event name */}
-              <td style={{ padding: '20px 16px', fontSize: '13px', color: '#374151' }}>
-                {b.event?.title || '—'}
-              </td>
-
-              {/* Event type public/private */}
-              <td style={{ padding: '20px 16px' }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  padding: '5px 14px', borderRadius: '9999px',
-                  fontSize: '12px',
-                  backgroundColor: b.event?.isPublic ? '#1f2937' : '#f3f4f6',
-                  color: b.event?.isPublic ? '#fff' : '#6b7280',
-                }}>
-                  {b.event?.isPublic ? 'Public' : 'Private'}
-                </span>
-              </td>
-
-              {/* Agreed/offered amount */}
-              <td style={{ padding: '20px 16px', fontSize: '13px', fontWeight: 500, color: '#111827' }}>
-                {b.agreedAmount ? `Nu. ${Number(b.agreedAmount).toLocaleString()}` : '—'}
-              </td>
-
-              {/* Status */}
-              <td style={{ padding: '20px 16px', fontSize: '13px', ...statusStyle(b.status) }}>
-                {b.status ? b.status.charAt(0).toUpperCase() + b.status.slice(1) : '—'}
+          {filtered.length === 0 ? (
+            <tr>
+              <td colSpan={7} style={{ padding: '64px 16px', textAlign: 'center', fontSize: '12px', color: '#d1d5db' }}>
+                No bookings found
               </td>
             </tr>
-          ))}
+          ) : (
+            filtered.map((b, i) => (
+              <tr
+                key={b._id || i}
+                onClick={() => onView?.(b)}
+                style={{ borderBottom: '1px solid #f9fafb', cursor: onView ? 'pointer' : 'default' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#fafafa')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                {/* ID */}
+                <td style={{ padding: '20px 16px', fontSize: '11px', color: '#c0c8d4', fontFamily: 'monospace' }}>
+                  {String(i + 1).padStart(2, '0')}
+                </td>
+
+                {/* Entertainer name */}
+                <td style={{ padding: '20px 16px', fontSize: '13px', fontWeight: 500, color: '#111827' }}>
+                  {b.entertainer?.stageName || b.entertainer?.name || '—'}
+                </td>
+
+                {/* Entertainer type */}
+                <td style={{ padding: '20px 16px' }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    padding: '5px 14px', borderRadius: '9999px',
+                    fontSize: '12px', backgroundColor: '#f3f4f6', color: '#374151',
+                    textTransform: 'capitalize',
+                  }}>
+                    {b.entertainer?.entertainerType ||
+                     b.entertainer?.bio?.entertainerType ||
+                     b.entertainerType ||
+                     '—'}
+                  </span>
+                </td>
+
+                {/* Event name */}
+                <td style={{ padding: '20px 16px', fontSize: '13px', color: '#374151' }}>
+                  {b.event?.title || '—'}
+                </td>
+
+                {/* Event type public/private */}
+                <td style={{ padding: '20px 16px' }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    padding: '5px 14px', borderRadius: '9999px',
+                    fontSize: '12px',
+                    backgroundColor: b.event?.isPublic ? '#1f2937' : '#f3f4f6',
+                    color: b.event?.isPublic ? '#fff' : '#6b7280',
+                  }}>
+                    {b.event?.isPublic ? 'Public' : 'Private'}
+                  </span>
+                </td>
+
+                {/* Agreed amount */}
+                <td style={{ padding: '20px 16px', fontSize: '13px', fontWeight: 500, color: '#111827' }}>
+                  {b.agreedAmount ? `Nu. ${Number(b.agreedAmount).toLocaleString()}` : '—'}
+                </td>
+
+                {/* Status */}
+                <td style={{ padding: '20px 16px', fontSize: '13px', ...statusStyle(b.status) }}>
+                  {b.status ? b.status.charAt(0).toUpperCase() + b.status.slice(1) : '—'}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
-
-      {filtered.length === 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
-          <p style={{ fontSize: '12px', color: '#d1d5db' }}>No bookings found</p>
-        </div>
-      )}
     </div>
   );
 };

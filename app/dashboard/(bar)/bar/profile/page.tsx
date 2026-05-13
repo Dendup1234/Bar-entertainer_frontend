@@ -1,78 +1,66 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import { profileService } from '@/features/profile/services/profileservices';
 import { BarProfileForm } from './components/BarProfileForm';
 import { BarEditModal } from './components/BarEditModal';
 
-export default function BarProfilePage() { // Renamed for clarity
-    const [profile, setProfile] = useState<any>(null);
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
+export default function BarProfilePage() {
+  const [profile, setProfile] = useState<any>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-    const fetchProfileData = async () => {
-        setLoading(true);
-        const storedData = localStorage.getItem('auth-storage');
-        let token = '';
+  const fetchProfileData = async () => {
+    setLoading(true);
+    const stored = localStorage.getItem('auth-storage');
+    let token = '';
+    if (stored) {
+      try { token = JSON.parse(stored).state?.token || ''; }
+      catch (e) { console.error(e); }
+    }
+    if (!token) { setLoading(false); return; }
+    try {
+      const data = await profileService.getProfile('bar', token);
+      setProfile(data.profile || data);
+    } catch (err) {
+      console.error('Failed to fetch bar profile:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (storedData) {
-            try {
-                const parsed = JSON.parse(storedData);
-                // Accessing the zustand/auth state properly
-                token = parsed.state?.token || '';
-            } catch (e) {
-                console.error("Error parsing auth-storage:", e);
-            }
-        }
+  useEffect(() => { fetchProfileData(); }, []);
 
-        if (!token) {
-            setLoading(false);
-            return;
-        }
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+      <Loader2 className="animate-spin" size={32} style={{ color: '#e5e7eb' }} />
+    </div>
+  );
 
-        try {
-            // HARDCODED 'bar' ROLE: This ensures this page ALWAYS 
-            // requests bar data, even if the routing changes slightly.
-            const role = 'bar'; 
-            const data = await profileService.getProfile(role, token);
-            setProfile(data.profile || data);
-        } catch (err) {
-            console.error("Failed to fetch bar profile:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchProfileData();
-    }, []);
-
-    if (loading) return (
-        <div className="flex items-center justify-center min-h-100">
-            <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+  return (
+    <div style={{ padding: '40px 48px', maxWidth: '900px', margin: '0 auto' }}>
+      {profile ? (
+        <div style={{
+          backgroundColor: '#fff', borderRadius: '20px',
+          border: '1px solid #f3f4f6',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.05)', overflow: 'hidden',
+        }}>
+          <BarProfileForm user={profile} onOpenEdit={() => setIsEditOpen(true)} />
+          <BarEditModal
+            isOpen={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            user={profile}
+            onSaveSuccess={fetchProfileData}
+          />
         </div>
-    );
-
-    return (
-        <div className="px-12 py-10 max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-10">
-                Bar Profile
-            </h1>
-            
-            {profile ? (
-                <div className="bg-white rounded-4xl border border-gray-100 p-2 shadow-sm">
-                    <BarProfileForm user={profile} onOpenEdit={() => setIsEditOpen(true)} />
-                    <BarEditModal  
-                        isOpen={isEditOpen} 
-                        onClose={() => setIsEditOpen(false)} 
-                        user={profile} 
-                        onSaveSuccess={fetchProfileData} 
-                    />
-                </div>
-            ) : (
-                <div className="bg-white border border-gray-100 rounded-4xl py-20 text-center shadow-sm">
-                    <p className="text-gray-400">No profile data found for this bar.</p>
-                </div>
-            )}
+      ) : (
+        <div style={{
+          backgroundColor: '#fff', borderRadius: '20px',
+          border: '1px solid #f3f4f6', padding: '80px 0', textAlign: 'center',
+        }}>
+          <p style={{ fontSize: '14px', color: '#9ca3af' }}>No profile data found.</p>
         </div>
-    );
+      )}
+    </div>
+  );
 }
