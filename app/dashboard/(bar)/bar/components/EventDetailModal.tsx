@@ -36,7 +36,12 @@ const formatDate = (d: string) => {
 
 const formatTime = (t: string) => {
     if (!t) return '—';
-    return new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (/^\d{2}:\d{2}/.test(t)) return t.slice(0, 5);
+
+    const date = new Date(t);
+    if (Number.isNaN(date.getTime())) return '—';
+
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 const statusColor = (s: string) => {

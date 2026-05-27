@@ -6,7 +6,12 @@ export const entertainerServices = {
   getEvents: async () => {
     return await apiClient(ENDPOINTS.ENTERTAINER.FETCH_EVENTS);
   },
-applyForEvent: async (eventId: string) => {
+
+  getEventById: async (eventId: string) => {
+    return await apiClient(ENDPOINTS.ENTERTAINER.GET_EVENT_BY_ID(eventId));
+  },
+
+  applyForEvent: async (eventId: string) => {
     return await apiClient(ENDPOINTS.ENTERTAINER.APPLY_EVENT(eventId), {
       method: 'POST',
     });

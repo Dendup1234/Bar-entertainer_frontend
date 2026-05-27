@@ -17,10 +17,38 @@ const ENTERTAINER_TYPES = [
 ];
 
 const STATUS_OPTIONS = ['open', 'in progress', 'completed', 'canceled'];
+const HOURS_12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+type TimeField = 'startTime' | 'endTime';
+type TimePeriod = 'AM' | 'PM';
 
-const toISO = (date: string, time: string) => {
+const toDateISO = (date: string) => {
+  if (!date) return '';
+  return new Date(`${date}T00:00:00.000Z`).toISOString();
+};
+
+const toDateTimeISO = (date: string, time: string) => {
   if (!date || !time) return '';
   return new Date(`${date}T${time}:00`).toISOString();
+};
+
+const isValidTime = (time: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+
+const normalizeTimeInput = (value: string) => {
+  const trimmed = value.trim();
+
+  if (/^\d{3,4}$/.test(trimmed)) {
+    const minutes = trimmed.slice(-2);
+    const hours = trimmed.slice(0, -2).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  if (/^\d{1,2}:\d{2}$/.test(trimmed)) {
+    const [hours, minutes] = trimmed.split(':');
+    return `${hours.padStart(2, '0')}:${minutes}`;
+  }
+
+  return trimmed;
 };
 
 const toTimeInput = (v: string) => {
@@ -29,11 +57,49 @@ const toTimeInput = (v: string) => {
   return v;
 };
 
+const toPickerParts = (time: string): { hour: string; minute: string; period: TimePeriod } => {
+  const normalized = normalizeTimeInput(time);
+  if (!isValidTime(normalized)) return { hour: '10', minute: '00', period: 'AM' };
+
+  const [hourValue, minute] = normalized.split(':');
+  const hour24 = Number(hourValue);
+  const period: TimePeriod = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 || 12;
+
+  return { hour: String(hour12).padStart(2, '0'), minute, period };
+};
+
+const to24HourTime = (hour: string, minute: string, period: TimePeriod) => {
+  const hourNumber = Number(hour);
+  const hour24 = period === 'AM'
+    ? hourNumber % 12
+    : (hourNumber % 12) + 12;
+
+  return `${String(hour24).padStart(2, '0')}:${minute}`;
+};
+
+const displayTime = (time: string) => {
+  const normalized = normalizeTimeInput(time);
+  if (!isValidTime(normalized)) return 'Select time';
+
+  const { hour, minute, period } = toPickerParts(normalized);
+  return `${hour}:${minute} ${period}`;
+};
+
+const getEventImageUrl = (event: any) => event?.bannerImageUrl || event?.coverImage || event?.image || '';
+
 export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [pendingImageBlobName, setPendingImageBlobName] = useState<string | null>(null);
+  const [activeTimeField, setActiveTimeField] = useState<TimeField | null>(null);
+  const [draftTime, setDraftTime] = useState<{ hour: string; minute: string; period: TimePeriod }>({
+    hour: '10',
+    minute: '00',
+    period: 'AM',
+  });
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -59,52 +125,62 @@ export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) 
         entertainerTypeNeeded: initialData.entertainerTypeNeeded?.[0] || 'dj',
         genresPreferred: initialData.genresPreferred?.join(', ') || '',
       });
-      if (initialData.coverImage) {
-        setBannerPreview(initialData.coverImage);
-        setUploadedImageUrl(initialData.coverImage);
+      const imageUrl = getEventImageUrl(initialData);
+      if (imageUrl) {
+        setBannerPreview(imageUrl);
+        setUploadedImageUrl(imageUrl);
       }
     }
   }, [initialData]);
 
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
+  const openTimePicker = (field: TimeField) => {
+    setDraftTime(toPickerParts(form[field]));
+    setActiveTimeField(field);
+  };
+
+  const applyTimePicker = () => {
+    if (!activeTimeField) return;
+
+    set(activeTimeField, to24HourTime(draftTime.hour, draftTime.minute, draftTime.period));
+    setActiveTimeField(null);
+  };
+
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!['image/jpeg', 'image/jpg'].includes(file.type)) {
-      alert('Only JPEG/JPG images are supported.');
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      alert('Only JPEG and PNG images are supported.');
       e.target.value = '';
       return;
     }
 
     setBannerPreview(URL.createObjectURL(file));
     setUploadedImageUrl(null);
+    setPendingImageBlobName(null);
     setIsUploadingImage(true);
 
     try {
       const { sasUrl, blobName } = await barService.getEventImageSasUrl(file);
       await barService.uploadEventImageToAzure(sasUrl, file);
 
-      // Pass eventId if editing, undefined if creating
-      const confirmed = await barService.confirmEventImageUpload(
-        blobName,
-        initialData?._id
-      );
-
-      console.log('CONFIRM RESPONSE:', confirmed);
-
-      // For existing events, bannerImageUrl is set directly on the event
-      // For new events, we store the URL to send with create payload
-      const imageUrl = confirmed.data?.bannerImageUrl || confirmed.data?.profileImage;
-      console.log('RESOLVED IMAGE URL:', imageUrl);
-      setUploadedImageUrl(imageUrl);
+      if (initialData?._id) {
+        const confirmed = await barService.confirmEventImageUpload(blobName, initialData._id);
+        setUploadedImageUrl(getEventImageUrl(confirmed.data));
+      } else {
+        setPendingImageBlobName(blobName);
+        setUploadedImageUrl(sasUrl.split('?')[0]);
+      }
     } catch (err) {
       console.error('Image upload failed:', err);
-      alert('Image upload failed. Please try again.');
+      alert(err instanceof Error ? err.message : 'Image upload failed. Please try again.');
       setBannerPreview(null);
+      setPendingImageBlobName(null);
     } finally {
       setIsUploadingImage(false);
+      e.target.value = '';
     }
   };
 
@@ -116,27 +192,41 @@ export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) 
     }
     setIsSubmitting(true);
     try {
+      const startTime = normalizeTimeInput(form.startTime);
+      const endTime = normalizeTimeInput(form.endTime);
+
+      if (!isValidTime(startTime) || !isValidTime(endTime)) {
+        alert('Please enter start and end time in HH:mm format, for example 18:30.');
+        return;
+      }
+
       const payload = {
         ...form,
         entertainerTypeNeeded: [form.entertainerTypeNeeded],
         genresPreferred: form.genresPreferred.split(',').map(s => s.trim()).filter(Boolean),
-        startTime: toISO(form.eventDate, form.startTime),
-        endTime: toISO(form.eventDate, form.endTime),
-        ...(uploadedImageUrl ? { coverImage: uploadedImageUrl } : {}),
+        eventDate: toDateISO(form.eventDate),
+        startTime: toDateTimeISO(form.eventDate, startTime),
+        endTime: toDateTimeISO(form.eventDate, endTime),
+        ...(initialData?._id && uploadedImageUrl ? { bannerImageUrl: uploadedImageUrl } : {}),
       };
-
-      console.log('=== PAYLOAD BEING SENT ===', payload); // ADD THIS
-      console.log('=== uploadedImageUrl ===', uploadedImageUrl); // ADD THIS
 
       if (initialData?._id) {
         await barService.updateEvent(initialData._id, payload);
       } else {
-        await barService.createEvent(payload);
+        const created = await barService.createEvent(payload);
+        const eventId = created?.event?._id || created?.data?._id;
+
+        if (pendingImageBlobName) {
+          if (!eventId) {
+            throw new Error('Event created, but the image could not be attached because the event ID was missing.');
+          }
+          await barService.confirmEventImageUpload(pendingImageBlobName, eventId);
+        }
       }
       onSuccess();
     } catch (err) {
       console.error(err);
-      alert('Error saving event');
+      alert(err instanceof Error ? err.message : 'Error saving event');
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +326,7 @@ export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) 
                           Uploading...
                         </p>
                       </>
-                    ) : uploadedImageUrl ? (
+                    ) : uploadedImageUrl || pendingImageBlobName ? (
                       <>
                         <div style={{
                           width: '28px', height: '28px', borderRadius: '50%',
@@ -246,7 +336,7 @@ export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) 
                           <Check size={14} color="#fff" />
                         </div>
                         <p style={{ color: '#fff', fontSize: '12px', fontWeight: 500 }}>
-                          Uploaded — click to change
+                          {pendingImageBlobName ? 'Ready to attach' : 'Uploaded'} — click to change
                         </p>
                       </>
                     ) : (
@@ -272,12 +362,12 @@ export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) 
                     Click to upload banner
                   </p>
                   <p style={{ fontSize: '11px', color: '#9ca3af', margin: '3px 0 0' }}>
-                    JPG / JPEG only, up to 5MB
+                    JPG, JPEG, or PNG
                   </p>
                 </>
               )}
             </div>
-            <input ref={fileRef} type="file" accept="image/jpeg,image/jpg" onChange={handleFile} style={{ display: 'none' }} />
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png" onChange={handleFile} style={{ display: 'none' }} />
           </div>
 
           {/* Event Name */}
@@ -314,13 +404,43 @@ export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) 
           <div style={grid2}>
             <div>
               <label style={lbl}>Start Time</label>
-              <input type="time" value={form.startTime}
-                onChange={e => set('startTime', e.target.value)} style={inp} />
+              <button
+                type="button"
+                onClick={() => openTimePicker('startTime')}
+                style={{
+                  ...inp,
+                  height: '42px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  color: isValidTime(form.startTime) ? '#111827' : '#9ca3af',
+                }}
+              >
+                <span>{displayTime(form.startTime)}</span>
+                <span style={{ color: '#9ca3af', fontSize: '12px' }}>Select</span>
+              </button>
             </div>
             <div>
               <label style={lbl}>End Time</label>
-              <input type="time" value={form.endTime}
-                onChange={e => set('endTime', e.target.value)} style={inp} />
+              <button
+                type="button"
+                onClick={() => openTimePicker('endTime')}
+                style={{
+                  ...inp,
+                  height: '42px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  color: isValidTime(form.endTime) ? '#111827' : '#9ca3af',
+                }}
+              >
+                <span>{displayTime(form.endTime)}</span>
+                <span style={{ color: '#9ca3af', fontSize: '12px' }}>Select</span>
+              </button>
             </div>
           </div>
 
@@ -451,6 +571,160 @@ export const EventForm = ({ initialData, onSuccess, onCancel }: EventFormProps) 
             }
           </button>
         </div>
+
+        {activeTimeField && (
+          <div
+            onClick={() => setActiveTimeField(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 80,
+              backgroundColor: 'rgba(17,24,39,0.22)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '18px',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: '312px',
+                backgroundColor: '#fff',
+                borderRadius: '18px',
+                boxShadow: '0 24px 70px rgba(17,24,39,0.22)',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ padding: '26px 28px 22px' }}>
+                <h3 style={{ margin: 0, color: '#111827', fontSize: '22px', fontWeight: 500 }}>
+                  Select Time
+                </h3>
+                <p style={{ margin: '6px 0 0', color: '#9ca3af', fontSize: '12px', fontWeight: 500 }}>
+                  {activeTimeField === 'startTime' ? 'Start time' : 'End time'}
+                </p>
+              </div>
+
+              <div style={{
+                borderTop: '1px solid #e5e7eb',
+                borderBottom: '1px solid #e5e7eb',
+                padding: '24px 26px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+              }}>
+                <select
+                  aria-label="Hour"
+                  value={draftTime.hour}
+                  onChange={(e) => setDraftTime(prev => ({ ...prev, hour: e.target.value }))}
+                  style={{
+                    width: '64px',
+                    height: '36px',
+                    border: '1px solid #edf0f5',
+                    borderRadius: '8px',
+                    backgroundColor: '#f7f9ff',
+                    color: '#2563eb',
+                    fontSize: '16px',
+                    fontWeight: 500,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    outline: 'none',
+                  }}
+                >
+                  {HOURS_12.map(hour => <option key={hour} value={hour}>{hour}</option>)}
+                </select>
+                <span style={{ color: '#111827', fontSize: '20px', fontWeight: 500 }}>:</span>
+                <select
+                  aria-label="Minute"
+                  value={draftTime.minute}
+                  onChange={(e) => setDraftTime(prev => ({ ...prev, minute: e.target.value }))}
+                  style={{
+                    width: '66px',
+                    height: '36px',
+                    border: '1px solid #edf0f5',
+                    borderRadius: '8px',
+                    backgroundColor: '#fff',
+                    color: '#111827',
+                    fontSize: '16px',
+                    fontWeight: 500,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    outline: 'none',
+                  }}
+                >
+                  {MINUTES.map(minute => <option key={minute} value={minute}>{minute}</option>)}
+                </select>
+                <div style={{ display: 'flex', gap: '6px', marginLeft: '4px' }}>
+                  {(['AM', 'PM'] as TimePeriod[]).map(period => {
+                    const active = draftTime.period === period;
+                    return (
+                      <button
+                        key={period}
+                        type="button"
+                        onClick={() => setDraftTime(prev => ({ ...prev, period }))}
+                        style={{
+                          border: 'none',
+                          backgroundColor: 'transparent',
+                          color: active ? '#2563eb' : '#9ca3af',
+                          fontSize: '16px',
+                          fontWeight: active ? 600 : 500,
+                          cursor: 'pointer',
+                          padding: '4px 0',
+                        }}
+                      >
+                        {period}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{
+                padding: '24px 26px 28px',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '14px',
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTimeField(null)}
+                  style={{
+                    minWidth: '72px',
+                    height: '44px',
+                    border: 'none',
+                    backgroundColor: '#fff',
+                    color: '#2563eb',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={applyTimePicker}
+                  style={{
+                    minWidth: '104px',
+                    height: '44px',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    backgroundColor: '#3b82f6',
+                    color: '#fff',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    boxShadow: '0 8px 18px rgba(59,130,246,0.28)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

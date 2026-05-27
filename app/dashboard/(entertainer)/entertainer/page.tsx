@@ -2,13 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, Loader2 } from 'lucide-react';
 import { EventCard } from './components/EventCard';
+import { EventDetailModal } from './components/EventDetailModal';
 import { SearchBar } from './components/SearchBar';
 import { entertainerServices  } from '@/features/home/services/entertainerServices';
 
 export default function EntertainerDashboard() {
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -18,10 +22,15 @@ export default function EntertainerDashboard() {
     setLoading(true);
     try {
       const data = await entertainerServices .getEvents();
-      // Based on your screenshot, the array is inside a property called 'events'
-      setEvents(data.events || []); 
+      const nextEvents = Array.isArray(data?.events)
+        ? data.events
+        : Array.isArray(data?.data)
+          ? data.data
+          : [];
+      setEvents(nextEvents);
     } catch (err) {
       console.error("Failed to load events", err);
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -36,10 +45,37 @@ export default function EntertainerDashboard() {
     }
   };
 
-  const filtered = events.filter((e: any) =>
-    e.title.toLowerCase().includes(search.toLowerCase()) ||
-    e.venueAddress?.toLowerCase().includes(search.toLowerCase())
-  );
+  const normalizeEventDetail = (data: any) => {
+    if (Array.isArray(data?.events)) return data.events[0] || null;
+    if (Array.isArray(data?.data)) return data.data[0] || null;
+    return data?.event || data?.data || data || null;
+  };
+
+  const handleOpenEvent = async (evt: any) => {
+    setSelectedEvent(evt);
+    setIsDetailOpen(true);
+    setIsDetailLoading(true);
+
+    try {
+      const data = await entertainerServices.getEventById(evt._id);
+      setSelectedEvent(normalizeEventDetail(data) || evt);
+    } catch (err) {
+      console.error('Failed to load event details', err);
+      alert('Failed to load event details.');
+      setIsDetailOpen(false);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  const query = search.trim().toLowerCase();
+  const filtered = events.filter((e: any) => {
+    const title = String(e?.title || '').toLowerCase();
+    const venueAddress = String(e?.venueAddress || '').toLowerCase();
+    const city = String(e?.city || '').toLowerCase();
+
+    return title.includes(query) || venueAddress.includes(query) || city.includes(query);
+  });
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fff', padding: '40px 48px' }}>
@@ -71,23 +107,41 @@ export default function EntertainerDashboard() {
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
             gap: '24px',
           }}>
-            {filtered.map((evt: any) => (
-              <EventCard
-                key={evt._id}
-                _id={evt._id}
-                title={evt.title}
-                venueAddress={evt.venueAddress}
-                city={evt.city}
-                eventDate={evt.eventDate}
-                startTime={evt.startTime}
-                endTime={evt.endTime}
-                genresPreferred={evt.genresPreferred}
-                offeredAmount={evt.offeredAmount}
-                onApply={() => handleApply(evt._id)}
-              />
-            ))}
+            {filtered.map((evt: any) => {
+              const eventId = evt._id || evt.id;
+
+              return (
+                <EventCard
+                  key={eventId}
+                  _id={eventId}
+                  title={evt.title || 'Untitled Event'}
+                  bannerImageUrl={evt.bannerImageUrl || evt.coverImage || evt.image}
+                  venueAddress={evt.venueAddress}
+                  city={evt.city}
+                  eventDate={evt.eventDate}
+                  startTime={evt.startTime}
+                  endTime={evt.endTime}
+                  genresPreferred={Array.isArray(evt.genresPreferred) ? evt.genresPreferred : []}
+                  entertainerTypeNeeded={Array.isArray(evt.entertainerTypeNeeded) ? evt.entertainerTypeNeeded : []}
+                  offeredAmount={evt.offeredAmount}
+                  onOpen={() => eventId && handleOpenEvent({ ...evt, _id: eventId })}
+                  onApply={() => eventId && handleApply(eventId)}
+                />
+              );
+            })}
           </div>
         )}
+
+        <EventDetailModal
+          isOpen={isDetailOpen}
+          event={selectedEvent}
+          isLoading={isDetailLoading}
+          onClose={() => {
+            setIsDetailOpen(false);
+            setSelectedEvent(null);
+          }}
+          onApply={() => selectedEvent?._id && handleApply(selectedEvent._id)}
+        />
       </div>
     </div>
   );

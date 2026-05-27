@@ -1,4 +1,9 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://31.97.239.18:9000';
+const DEFAULT_API_BASE_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:8000'
+    : 'http://31.97.239.18:9000';
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
 export const ENDPOINTS = {
   AUTH: {
@@ -27,11 +32,14 @@ export const ENDPOINTS = {
     UPDATE_APPLICATION_STATUS: (id: string) => `/api/bar/applications/${id}/status`,
     GENERATE_REVIEW_TOKEN: (eventid: string) => `/api/bar/reviews/${eventid}/generate-token`,
     REGENERATE_REVIEW_TOKEN: (eventid: string) => `/api/bar/reviews/${eventid}/regenerate-token`,
+    GET_REVIEW_STATS: '/api/bar/reviews/events/stats',
+    GET_REVIEW_PROFILE: (eventId: string) => `/api/bar/reviews/${eventId}/profile`,
     
   },
 
   ENTERTAINER: {
     FETCH_EVENTS: '/api/entertainer/events',
+    GET_EVENT_BY_ID: (id: string) => `/api/entertainer/events/${id}/profile`,
     APPLY_EVENT: (id: string) => `/api/entertainer/events/${id}/apply`,
     FETCH_BOOKINGS:'/api/entertainer/bookings',
     BOOKING_STATUS:(id:string) => `/api/entertainer/bookings/${id}/status`

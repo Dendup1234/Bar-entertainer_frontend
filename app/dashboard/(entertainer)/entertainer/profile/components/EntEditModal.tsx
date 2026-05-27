@@ -1,7 +1,17 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, Check, Loader2 } from 'lucide-react';
 import { profileService } from '@/features/profile/services/profileservices';
+
+const getAuthToken = () => {
+  try {
+    const stored = localStorage.getItem('auth-storage');
+    return stored ? JSON.parse(stored).state?.token || '' : '';
+  } catch (err) {
+    console.error('Failed to read auth token:', err);
+    return '';
+  }
+};
 
 export const EntEditModal = ({ isOpen, onClose, user, onSaveSuccess }: any) => {
   const [form, setForm] = useState({
@@ -24,33 +34,64 @@ export const EntEditModal = ({ isOpen, onClose, user, onSaveSuccess }: any) => {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setForm({
+      stageName: user?.stageName || '',
+      name: user?.name || '',
+      phone: user?.phone || '',
+      entertainerType: user?.entertainerType || '',
+      location: user?.location || '',
+      experiences: user?.experiences || '',
+      availableAt: user?.availableAt || '',
+      availabilityStatus: user?.availabilityStatus || 'available',
+      performanceFeeMin: user?.performanceFeeMin || 0,
+      performanceFeeMax: user?.performanceFeeMax || 0,
+      genres: user?.genres?.join(', ') || '',
+      instagram: user?.socialLinks?.instagram || '',
+      youtube: user?.socialLinks?.youtube || '',
+      profileImage: user?.profileImage || '',
+    });
+  }, [isOpen, user]);
+
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      alert('Only JPEG and PNG images are supported.');
+      e.target.value = '';
+      return;
+    }
+
     setUploading(true);
-    const stored = localStorage.getItem('auth-storage');
-    const token = stored ? JSON.parse(stored).state?.token : '';
+    const token = getAuthToken();
     try {
       const { sasUrl, blobName } = await profileService.getSasUrl('entertainer', token, file);
-      const azureRes = await profileService.uploadToAzure(sasUrl, file);
-      if (azureRes.ok) {
-        const confirmRes = await profileService.confirmUpload('entertainer', token, blobName);
-        const finalUrl = confirmRes.profile?.profileImage || confirmRes.imageUrl;
-        set('profileImage', finalUrl);
+      await profileService.uploadToAzure(sasUrl, file);
+      const confirmRes = await profileService.confirmUpload('entertainer', token, blobName);
+      const finalUrl = confirmRes.data?.profileImage || confirmRes.profile?.profileImage || confirmRes.imageUrl;
+
+      if (!finalUrl) {
+        throw new Error('Upload confirmed, but no profile image URL was returned.');
       }
+
+      set('profileImage', finalUrl);
+      window.dispatchEvent(new Event('profile-updated'));
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Failed to upload image.');
+      alert(err instanceof Error ? err.message : 'Failed to upload image.');
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
   const handleSave = async () => {
-    const stored = localStorage.getItem('auth-storage');
-    const token = stored ? JSON.parse(stored).state?.token : '';
+    const token = getAuthToken();
     try {
       const payload = {
         stageName:          form.stageName,
@@ -71,6 +112,7 @@ export const EntEditModal = ({ isOpen, onClose, user, onSaveSuccess }: any) => {
         profileImage: form.profileImage,
       };
       await profileService.updateProfile('entertainer', token, payload);
+      window.dispatchEvent(new Event('profile-updated'));
       onSaveSuccess();
       onClose();
     } catch (err) {
@@ -154,7 +196,7 @@ export const EntEditModal = ({ isOpen, onClose, user, onSaveSuccess }: any) => {
                 </div>
               )}
             </div>
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png" onChange={handleImageUpload} style={{ display: 'none' }} />
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
@@ -213,7 +255,7 @@ export const EntEditModal = ({ isOpen, onClose, user, onSaveSuccess }: any) => {
                 style={{ ...inp, appearance: 'none', cursor: 'pointer' }}
               >
                 <option value="available">Available</option>
-                <option value="unavailable">Unavailable</option>
+                <option value="inactive">Inactive</option>
                 <option value="busy">Busy</option>
               </select>
             </div>

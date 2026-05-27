@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { EventDetailModal } from './EventDetailModal';
 import { QRModal } from './QRModal'; 
 import { barService } from '@/features/home/services/barServices';
@@ -12,8 +12,14 @@ const formatDate = (dateStr: string) => {
 
 const formatTime = (start: string, end: string) => {
   if (!start || !end) return '—';
-  const fmt = (t: string) =>
-    new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const fmt = (t: string) => {
+    if (/^\d{2}:\d{2}/.test(t)) return t.slice(0, 5);
+
+    const date = new Date(t);
+    if (Number.isNaN(date.getTime())) return '—';
+
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
   return `${fmt(start)} – ${fmt(end)}`;
 };
 
@@ -28,10 +34,35 @@ interface Props {
 export const EventTable = ({ events, searchTerm, onRefresh }: Props) => {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [loadingEventId, setLoadingEventId] = useState<string | null>(null);
+  const [generatedQrEvents, setGeneratedQrEvents] = useState<Record<string, boolean>>({});
   
   // QR Modal States
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [qrData, setQrData] = useState<{ reviewUrl: string; token: string; eventName: string } | null>(null);
+  const [qrData, setQrData] = useState<{
+    reviewUrl: string;
+    token: string;
+    eventName: string;
+    validFrom?: string;
+    validUntil?: string;
+    mode: 'generated' | 'regenerated';
+  } | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('bar-review-qr-events');
+      if (stored) setGeneratedQrEvents(JSON.parse(stored));
+    } catch {
+      setGeneratedQrEvents({});
+    }
+  }, []);
+
+  const markQrGenerated = (eventId: string) => {
+    setGeneratedQrEvents((current) => {
+      const next = { ...current, [eventId]: true };
+      localStorage.setItem('bar-review-qr-events', JSON.stringify(next));
+      return next;
+    });
+  };
 
   const filtered = events.filter((e) =>
     (e.title || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -52,19 +83,24 @@ export const EventTable = ({ events, searchTerm, onRefresh }: Props) => {
     }
   };
 
-  // Logic to generate the unique QR Token and open modal
+  // Logic to generate/regenerate the unique QR Token and open modal
   const handleGenerateQR = async (e: any) => {
-    // Prevent row click trigger
     setLoadingEventId(e._id);
     try {
-      // Calling the API based on the logic from image_bb7f80.png
-      const response = await barService.generateReviewToken(e._id);
+      const shouldRegenerate = !!generatedQrEvents[e._id];
+      const response = shouldRegenerate
+        ? await barService.regenerateReviewToken(e._id)
+        : await barService.generateReviewToken(e._id);
       
       if (response && response.reviewUrl) {
+        markQrGenerated(e._id);
         setQrData({
           reviewUrl: response.reviewUrl,
           token: response.token,
-          eventName: e.title || 'Event'
+          eventName: e.title || 'Event',
+          validFrom: response.validFrom,
+          validUntil: response.validUntil,
+          mode: shouldRegenerate ? 'regenerated' : 'generated',
         });
         setIsQrModalOpen(true);
       }
@@ -176,7 +212,11 @@ export const EventTable = ({ events, searchTerm, onRefresh }: Props) => {
                       opacity: loadingEventId === e._id ? 0.5 : 1
                     }}
                   >
-                    {loadingEventId === e._id ? 'Processing...' : 'Generate QR code'}
+                    {loadingEventId === e._id
+                      ? 'Processing...'
+                      : generatedQrEvents[e._id]
+                        ? 'Regenerate QR code'
+                        : 'Generate QR code'}
                   </button>
                 </td>
               </tr>

@@ -9,8 +9,13 @@ export const profileService = {
         'Content-Type': 'application/json',
       },
     });
-    if (!response.ok) throw new Error('Failed to fetch profile');
-    return await response.json();
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(data.message || data.error || 'Failed to fetch profile') as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+    return data;
   },
 
   updateProfile: async (role: string, token: string, profileData: any) => {
@@ -22,8 +27,9 @@ export const profileService = {
       },
       body: JSON.stringify(profileData),
     });
-    if (!response.ok) throw new Error('Failed to update profile');
-    return await response.json();
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || data.error || 'Failed to update profile');
+    return data;
   },
 
   // --- IMAGE UPLOAD HANDSHAKE ---
@@ -41,13 +47,14 @@ export const profileService = {
         size: file.size 
       }), 
     });
-    if (!response.ok) throw new Error('Failed to get SAS URL');
-    return await response.json(); // Returns { sasUrl, blobName }
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || data.error || 'Failed to get SAS URL');
+    return data; // Returns { sasUrl, blobName }
   },
 
   // STEP 2: Direct Upload to Azure Blob Storage
   uploadToAzure: async (sasUrl: string, file: File) => {
-    return await fetch(sasUrl, {
+    const response = await fetch(sasUrl, {
       method: 'PUT', 
       headers: {
         'x-ms-blob-type': 'BlockBlob',
@@ -55,6 +62,8 @@ export const profileService = {
       },
       body: file,
     });
+    if (!response.ok) throw new Error('Failed to upload image to storage');
+    return response;
   },
 
   // STEP 3: Confirm with Backend
@@ -70,7 +79,8 @@ export const profileService = {
         imageType: role 
       }), 
     });
-    if (!response.ok) throw new Error('Failed to confirm upload');
-    return await response.json();
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || data.error || 'Failed to confirm upload');
+    return data;
   }
 };

@@ -61,6 +61,8 @@ export default function BarEventsPage() {
                 paddingTop: '12px',
                 paddingBottom: '12px',
                 fontSize: '14px',
+                color: '#111827',
+                caretColor: '#111827',
                 backgroundColor: '#fff',
                 border: '1px solid #e5e7eb',
                 borderRadius: '9999px',

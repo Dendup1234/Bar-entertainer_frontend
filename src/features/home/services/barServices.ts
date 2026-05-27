@@ -65,6 +65,24 @@ export const barService = {
         });
     },
 
+    getReviewStats: async () => {
+        return await apiClient(ENDPOINTS.BAR.GET_REVIEW_STATS);
+    },
+
+    getReviewProfile: async (
+        eventId: string,
+        params?: { cursorCreatedAt?: string; cursorId?: string; limit?: number },
+    ) => {
+        const searchParams = new URLSearchParams();
+
+        if (params?.cursorCreatedAt) searchParams.set('cursorCreatedAt', params.cursorCreatedAt);
+        if (params?.cursorId) searchParams.set('cursorId', params.cursorId);
+        if (params?.limit) searchParams.set('limit', String(params.limit));
+
+        const query = searchParams.toString();
+        return await apiClient(`${ENDPOINTS.BAR.GET_REVIEW_PROFILE(eventId)}${query ? `?${query}` : ''}`);
+    },
+
     getAllBookings: async () => {
         return await apiClient(ENDPOINTS.BAR.GET_BOOKINGS);
     },
@@ -105,9 +123,9 @@ export const barService = {
             body: JSON.stringify({ mimeType: file.type, size: file.size }),
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
-        if (!response.ok) throw new Error('Failed to get SAS URL');
+        if (!response.ok) throw new Error(data.message || data.error || 'Failed to get SAS URL');
         return data;
     },
 
@@ -140,7 +158,8 @@ export const barService = {
                 eventId: eventId,
             }),
         });
-        if (!response.ok) throw new Error('Failed to confirm upload');
-        return await response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || data.error || 'Failed to confirm upload');
+        return data;
     },
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Calendar, Music2, Clock, MapPin, DollarSign, Users } from 'lucide-react';
+import { Calendar, Music2, Clock, MapPin, DollarSign, Users } from 'lucide-react';
 
 interface Props {
   _id: string;
@@ -14,6 +14,7 @@ interface Props {
   genresPreferred?: string[];
   entertainerTypeNeeded?: string[]; 
   offeredAmount?: number;
+  onOpen?: () => void;
   onApply?: () => void;
 }
 
@@ -24,15 +25,23 @@ const formatDate = (d: string) => {
 
 const formatTime = (start: string, end: string) => {
   if (!start || !end) return '—';
-  const fmt = (t: string) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const fmt = (t: string) => {
+    if (/^\d{2}:\d{2}/.test(t)) return t.slice(0, 5);
+
+    const date = new Date(t);
+    if (Number.isNaN(date.getTime())) return '—';
+
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
   return `${fmt(start)} – ${fmt(end)}`;
 };
 
 export const EventCard = ({
   title, bannerImageUrl, venueAddress, city,
   eventDate, startTime, endTime, genresPreferred,
-  entertainerTypeNeeded, offeredAmount, onApply,
+  entertainerTypeNeeded, offeredAmount, onOpen, onApply,
 }: Props) => {
+  const displayTitle = title || 'Untitled Event';
 
   const Row = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -46,23 +55,34 @@ export const EventCard = ({
       backgroundColor: '#fff', borderRadius: '16px',
       border: '1px solid #e5e7eb', overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
-    }}>
+      cursor: 'pointer',
+    }}
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen?.();
+        }
+      }}
+    >
       {/* Banner */}
       <div style={{ width: '100%', height: '140px', backgroundColor: '#111827', position: 'relative' }}>
         {bannerImageUrl 
-          ? <img src={bannerImageUrl} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ? <img src={bannerImageUrl} alt={displayTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : <div style={{ 
               width: '100%', height: '100%', 
               background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center' 
             }}>
-              <p style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800 }}>{title.substring(0, 2).toUpperCase()}</p>
+              <p style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800 }}>{displayTitle.substring(0, 2).toUpperCase()}</p>
             </div>
         }
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 700 }}>{title}</h3>
+        <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 700 }}>{displayTitle}</h3>
 
         <div style={{ flex: 1 }}>
           <Row icon={<MapPin size={13} />} text={venueAddress || city || 'Location TBD'} />
@@ -74,7 +94,10 @@ export const EventCard = ({
         </div>
 
         <button
-          onClick={onApply}
+          onClick={(event) => {
+            event.stopPropagation();
+            onApply?.();
+          }}
           style={{
             marginTop: '14px', width: '100%', padding: '10px',
             backgroundColor: '#111827', color: '#fff',

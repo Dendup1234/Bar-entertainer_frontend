@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Star, CheckCircle, MapPin, Music, DollarSign, MessageSquare } from 'lucide-react';
+import { Star, CheckCircle, MapPin, Music, DollarSign, MessageSquare, User } from 'lucide-react';
 import { BookingModal } from './BookingModal';
 
 const DetailItem = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
-  <div className="flex items-start gap-3 text-sm text-gray-700">
-    <div className="w-4 h-4 flex items-center justify-center mt-0.5 text-gray-500">
+  <div className="flex items-start gap-2 text-[12px] leading-snug text-gray-700">
+    <div className="mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center text-black">
       {icon}
     </div>
-    <div className="flex-1">{children}</div>
+    <div className="min-w-0 flex-1">{children}</div>
   </div>
 );
 
@@ -26,52 +26,62 @@ export const EntertainerCard = ({
   latestComment,
 }: any) => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const displayName = stageName || 'Unknown Artist';
+  const displayType = entertainerType || 'singer';
+  const feeLabel = performanceFeeMin || performanceFeeMax
+    ? `Nu. ${Number(performanceFeeMin || 0).toLocaleString()} - ${Number(performanceFeeMax || 0).toLocaleString()}`
+    : 'Fee not provided';
 
   return (
     <>
-      <div className="w-75 bg-[#f4f4f4] border border-gray-200 rounded-2xl overflow-hidden">
-
-        <div className="relative w-full h-30">
-          <img
-            src={profileImage || '/placeholder.jpg'}
-            alt={stageName}
-            className="w-full h-full object-cover"
-          />
+      <div className="flex h-full min-h-[430px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="relative h-[180px] w-full shrink-0 bg-gray-100">
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt={displayName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+              <User size={54} strokeWidth={1.5} />
+            </div>
+          )}
           <div className="absolute top-2 right-2">
-            <span className="bg-gray-900/80 backdrop-blur-sm text-white text-[11px] px-3 py-1 rounded-full font-medium capitalize">
-              {entertainerType || 'dj'}
+            <span className="rounded-full bg-gray-900/85 px-3 py-1 text-[10px] font-medium capitalize text-white backdrop-blur-sm">
+              {displayType}
             </span>
           </div>
         </div>
 
-        <div className="px-5 py-4 space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 leading-tight">
-            {stageName || 'Unknown Artist'}
+        <div className="flex flex-1 flex-col px-4 py-4">
+          <h3 className="mb-2 text-[14px] font-semibold leading-tight text-gray-950">
+            {displayName}
           </h3>
 
           <div className="space-y-1.5">
             <DetailItem icon={<Star size={13} />}>
               <span className="font-medium text-gray-900">{avgRating ?? '0.0'}</span>
-              <span className="text-gray-500 ml-1">({reviewCount ?? 0} reviews)</span>
+              <span className="ml-1 text-gray-500">({reviewCount ?? 0} reviews)</span>
             </DetailItem>
             <DetailItem icon={<CheckCircle size={13} />}>{bookingCount ?? 0} Verified Booking</DetailItem>
-            <DetailItem icon={<Music size={13} />}>{genres?.length ? genres.join(', ') : 'No genres'}</DetailItem>
+            <DetailItem icon={<Music size={13} />}>{genres?.length ? genres.join(', ') : 'Genre not provided'}</DetailItem>
             <DetailItem icon={<MapPin size={13} />}>{location || 'Unknown'}</DetailItem>
             <DetailItem icon={<DollarSign size={13} />}>
-              Nu. {performanceFeeMin?.toLocaleString() || 0} – {performanceFeeMax?.toLocaleString() || 0}
+              {feeLabel}
             </DetailItem>
           </div>
 
-          <div className="flex gap-3 text-sm text-gray-500 italic pt-1">
-            <MessageSquare size={13} className="mt-0.5" />
-            <p className="leading-snug line-clamp-2">
+          <div className="mt-3 flex gap-2 text-[12px] italic leading-snug text-gray-500">
+            <MessageSquare size={13} className="mt-0.5 shrink-0 text-black" />
+            <p className="line-clamp-3">
               {latestComment ? `"${latestComment}"` : `"No reviews yet"`}
             </p>
           </div>
 
           <button
             onClick={(e) => { e.stopPropagation(); setIsBookingOpen(true); }}
-            className="w-full py-2 bg-black text-white rounded-lg text-sm font-medium"
+            className="mt-auto w-full rounded-sm bg-[#202020] py-2 text-[13px] font-medium text-white transition-colors hover:bg-black"
           >
             Book
           </button>

@@ -36,8 +36,15 @@ const LoginPage = () => {
         // 1. Perform login
         const data = await authService.login(userType, formData);
 
+        const token = data.token || data.accessToken;
+        const user = data.user || data.data || null;
+
+        if (!token) {
+          throw new Error('Login succeeded, but no auth token was returned.');
+        }
+
         // 2. Save to Zustand Store
-        setAuth(data.user, data.accessToken);
+        setAuth(user, token);
 
         // --- SAVE THE ROLE SO GATEWAY CAN READ IT ---
         authUtils.setRole(userType); 

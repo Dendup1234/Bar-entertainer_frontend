@@ -63,14 +63,15 @@ export default function BarDashboard() {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: '20px',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+            alignItems: 'stretch',
+            gap: '32px',
           }}>
             {entertainers.map((ent: any) => (
               <div
                 key={ent._id}
                 onClick={() => setSelectedId(ent._id)}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', height: '100%' }}
               >
                 <EntertainerCard {...ent} />
               </div>
