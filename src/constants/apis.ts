@@ -1,9 +1,6 @@
-const DEFAULT_API_BASE_URL =
-  process.env.NODE_ENV === 'development'
-    ? 'https://bar-entertainer-platform.vercel.app'
-    : '';
+const DEFAULT_API_BASE_URL ='https://bar-entertainer-platform.vercel.app';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL;
+export const API_BASE_URL = DEFAULT_API_BASE_URL;
 
 export const ENDPOINTS = {
   AUTH: {
