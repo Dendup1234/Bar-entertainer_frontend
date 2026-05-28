@@ -1,15 +1,17 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Filter, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { EventCard } from './components/EventCard';
 import { EventDetailModal } from './components/EventDetailModal';
 import { SearchBar } from './components/SearchBar';
 import { entertainerServices  } from '@/features/home/services/entertainerServices';
+import { FilterButton, dashboardToolbarStyle } from '@/components/dashboard/DashboardControls';
 
 export default function EntertainerDashboard() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [eventTypeFilter, setEventTypeFilter] = useState<'All' | 'Public' | 'Private'>('All');
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -73,28 +75,26 @@ export default function EntertainerDashboard() {
     const title = String(e?.title || '').toLowerCase();
     const venueAddress = String(e?.venueAddress || '').toLowerCase();
     const city = String(e?.city || '').toLowerCase();
+    const eventType = e?.isPublic ? 'Public' : 'Private';
+    const matchesType = eventTypeFilter === 'All' || eventType === eventTypeFilter;
 
-    return title.includes(query) || venueAddress.includes(query) || city.includes(query);
+    return matchesType && (title.includes(query) || venueAddress.includes(query) || city.includes(query));
   });
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fff', padding: '40px 48px' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
+        <div style={dashboardToolbarStyle}>
           <SearchBar
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search for events"
           />
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '11px 22px', backgroundColor: '#fff',
-            border: '1px solid #e5e7eb', borderRadius: '9999px',
-            fontSize: '13px', cursor: 'pointer'
-          }}>
-            <Filter size={15} /> Filter
-          </button>
+          <FilterButton
+            label={eventTypeFilter === 'All' ? 'Filter' : eventTypeFilter}
+            onClick={() => setEventTypeFilter((current) => current === 'All' ? 'Public' : current === 'Public' ? 'Private' : 'All')}
+          />
         </div>
 
         {loading ? (

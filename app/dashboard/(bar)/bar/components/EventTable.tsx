@@ -26,12 +26,13 @@ const formatTime = (start: string, end: string) => {
 interface Props {
   events: any[];
   searchTerm: string;
+  eventTypeFilter?: 'All' | 'Public' | 'Private';
   onEdit?: (event: any) => void;
   onDeactivate?: (eventId: string) => void;
   onRefresh?: () => void;
 }
 
-export const EventTable = ({ events, searchTerm, onRefresh }: Props) => {
+export const EventTable = ({ events, searchTerm, eventTypeFilter = 'All', onRefresh }: Props) => {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [loadingEventId, setLoadingEventId] = useState<string | null>(null);
   const [generatedQrEvents, setGeneratedQrEvents] = useState<Record<string, boolean>>({});
@@ -64,9 +65,19 @@ export const EventTable = ({ events, searchTerm, onRefresh }: Props) => {
     });
   };
 
-  const filtered = events.filter((e) =>
-    (e.title || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = events.filter((e) => {
+    const query = searchTerm.toLowerCase();
+    const matchesSearch = [
+      e.title,
+      e.city,
+      e.venueAddress,
+      e.status,
+    ].some((value) => String(value || '').toLowerCase().includes(query));
+    const eventType = e.isPublic ? 'Public' : 'Private';
+    const matchesType = eventTypeFilter === 'All' || eventType === eventTypeFilter;
+
+    return matchesSearch && matchesType;
+  });
 
   // Logic to view event details
   const handleRowClick = async (e: any) => {

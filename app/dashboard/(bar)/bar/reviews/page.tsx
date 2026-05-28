@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Filter, Loader2, MessageCircle, User, X } from 'lucide-react';
+import { Loader2, MessageCircle, User, X } from 'lucide-react';
 import { barService } from '@/features/home/services/barServices';
 import { EventStatCard } from '../components/EventStats';
 import { SearchBar } from '../components/SearchBar';
+import { FilterButton, dashboardToolbarStyle } from '@/components/dashboard/DashboardControls';
 
 type ReviewRow = {
   _id: string;
@@ -292,25 +293,16 @@ export default function ReviewsPage() {
           <EventStatCard label="Private Events" value={privateEventCount} />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
+        <div style={dashboardToolbarStyle}>
           <SearchBar
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search reviews"
           />
-          <button
-            type="button"
+          <FilterButton
+            label={filterType === 'All' ? 'Filter' : filterType}
             onClick={() => setFilterType((current) => current === 'All' ? 'Public' : current === 'Public' ? 'Private' : 'All')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '11px 22px', backgroundColor: '#fff',
-              border: '1px solid #e5e7eb', borderRadius: '9999px',
-              fontSize: '13px', color: '#111827', cursor: 'pointer',
-            }}
-          >
-            <Filter size={14} />
-            {filterType === 'All' ? 'Filter' : filterType}
-          </button>
+          />
         </div>
 
         {loading ? (

@@ -36,19 +36,19 @@ const formatTime = (start: string, end: string) => {
   return `${fmt(start)} – ${fmt(end)}`;
 };
 
+const DetailRow = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+    <span style={{ color: '#9ca3af', flexShrink: 0 }}>{icon}</span>
+    <span style={{ fontSize: '12px', color: '#374151' }}>{text}</span>
+  </div>
+);
+
 export const EventCard = ({
   title, bannerImageUrl, venueAddress, city,
   eventDate, startTime, endTime, genresPreferred,
   entertainerTypeNeeded, offeredAmount, onOpen, onApply,
 }: Props) => {
   const displayTitle = title || 'Untitled Event';
-
-  const Row = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-      <span style={{ color: '#9ca3af', flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: '12px', color: '#374151' }}>{text}</span>
-    </div>
-  );
 
   return (
     <div style={{
@@ -82,15 +82,15 @@ export const EventCard = ({
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 700 }}>{displayTitle}</h3>
+        <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 800, color: '#111827' }}>{displayTitle}</h3>
 
         <div style={{ flex: 1 }}>
-          <Row icon={<MapPin size={13} />} text={venueAddress || city || 'Location TBD'} />
-          <Row icon={<Calendar size={13} />} text={formatDate(eventDate)} />
-          <Row icon={<Clock size={13} />} text={formatTime(startTime, endTime)} />
-          <Row icon={<Users size={13} />} text={entertainerTypeNeeded?.join(', ') || 'Any'} />
-          <Row icon={<Music2 size={13} />} text={genresPreferred?.join(', ') || 'All Genres'} />
-          <Row icon={<DollarSign size={13} />} text={offeredAmount ? `Nu. ${offeredAmount.toLocaleString()}` : 'Negotiable'} />
+          <DetailRow icon={<MapPin size={13} />} text={venueAddress || city || 'Location TBD'} />
+          <DetailRow icon={<Calendar size={13} />} text={formatDate(eventDate)} />
+          <DetailRow icon={<Clock size={13} />} text={formatTime(startTime, endTime)} />
+          <DetailRow icon={<Users size={13} />} text={entertainerTypeNeeded?.join(', ') || 'Any'} />
+          <DetailRow icon={<Music2 size={13} />} text={genresPreferred?.join(', ') || 'All Genres'} />
+          <DetailRow icon={<DollarSign size={13} />} text={offeredAmount ? `Nu. ${offeredAmount.toLocaleString()}` : 'Negotiable'} />
         </div>
 
         <button

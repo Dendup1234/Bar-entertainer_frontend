@@ -56,9 +56,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         };
 
         // PASS the cleaned 'payload' instead of the raw 'formData'
-        const result = await authService.sendRegistrationOtp(userType, payload);
-        
-        console.log("Registration initiated:", result);
+        await authService.sendRegistrationOtp(userType, payload);
         router.push(`/verify?email=${encodeURIComponent(formData.email)}&role=${encodeURIComponent(userType)}`);
     } catch (err: any) {
         console.error("Fetch Error:", err.message);

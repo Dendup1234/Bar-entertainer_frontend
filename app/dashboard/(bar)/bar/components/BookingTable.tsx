@@ -3,6 +3,7 @@ import React from 'react';
 interface Props {
   bookings: any[];
   searchTerm: string;
+  statusFilter?: 'All' | 'Pending' | 'Accepted' | 'Rejected';
   onView?: (booking: any) => void;
 }
 
@@ -17,12 +18,15 @@ const statusStyle = (status: string): React.CSSProperties => {
 
 const headers = ['ID', 'ENTERTAINER', 'TYPE', 'EVENT NAME', 'EVENT TYPE', 'OFFERED AMOUNT', 'STATUS'];
 
-export const BookingTable = ({ bookings, searchTerm, onView }: Props) => {
+export const BookingTable = ({ bookings, searchTerm, statusFilter = 'All', onView }: Props) => {
   const filtered = bookings.filter((b) => {
     const entertainerName = b.entertainer?.stageName || b.entertainer?.name || '';
     const eventName = b.event?.title || '';
     const q = searchTerm.toLowerCase();
-    return entertainerName.toLowerCase().includes(q) || eventName.toLowerCase().includes(q);
+    const matchesSearch = entertainerName.toLowerCase().includes(q) || eventName.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === 'All' || b.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
   });
 
   return (

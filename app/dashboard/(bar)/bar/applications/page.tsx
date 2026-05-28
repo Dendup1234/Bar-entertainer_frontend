@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Filter, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { BookingStatCard } from '../components/BookingStats';
 import { SearchBar } from '../components/SearchBar';
 import { barService } from '@/features/home/services/barServices';
+import { FilterButton, dashboardToolbarStyle } from '@/components/dashboard/DashboardControls';
 
 type TabType = 'Pending' | 'Shortlisted' | 'Accepted';
 
@@ -13,6 +14,7 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('Pending');
+  const [eventTypeFilter, setEventTypeFilter] = useState<'All' | 'Public' | 'Private'>('All');
 
   useEffect(() => { fetchData(); }, []);
 
@@ -52,10 +54,16 @@ export default function ApplicationsPage() {
     ? shortlistedApps
     : allApps.filter(a => a.status === activeTab.toLowerCase());
 
-  const filtered = tableData.filter((app: any) =>
-    (app.entertainer?.stageName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (app.event?.title || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = tableData.filter((app: any) => {
+    const query = searchTerm.toLowerCase();
+    const eventType = app.event?.isPublic ? 'Public' : 'Private';
+    const matchesType = eventTypeFilter === 'All' || eventType === eventTypeFilter;
+    const matchesSearch =
+      (app.entertainer?.stageName || '').toLowerCase().includes(query) ||
+      (app.event?.title || '').toLowerCase().includes(query);
+
+    return matchesType && matchesSearch;
+  });
 
   const headers = ['SI', 'DATE', 'ENTERTAINER', 'TYPE', 'EVENT NAME', 'EVENT TYPE', 'OFFERED AMOUNT', 'STATUS', 'ACTION'];
 
@@ -72,16 +80,12 @@ export default function ApplicationsPage() {
         </div>
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div style={{ ...dashboardToolbarStyle, marginBottom: '32px' }}>
           <SearchBar value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '11px 22px', border: '1px solid #e5e7eb',
-            borderRadius: '9999px', background: '#fff',
-            fontSize: '13px', color: '#111827', cursor: 'pointer',
-          }}>
-            <Filter size={15} /> Filter
-          </button>
+          <FilterButton
+            label={eventTypeFilter === 'All' ? 'Filter' : eventTypeFilter}
+            onClick={() => setEventTypeFilter((current) => current === 'All' ? 'Public' : current === 'Public' ? 'Private' : 'All')}
+          />
         </div>
 
         {/* Tabs */}

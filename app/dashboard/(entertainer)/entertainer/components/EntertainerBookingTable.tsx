@@ -3,6 +3,7 @@ import { entertainerServices } from '@/features/home/services/entertainerService
 interface Props {
   bookings: any[];
   searchTerm: string;
+  statusFilter?: 'All' | 'Pending' | 'Accepted' | 'Rejected';
   onRefresh: () => void;
 }
 
@@ -17,12 +18,21 @@ const statusStyle = (status: string): React.CSSProperties => {
 
 const headers = ['ID', 'EVENT NAME', 'EVENT TYPE', 'AGREED AMOUNT', 'STATUS', 'ACTION'];
 
-export const EntertainerBookingTable = ({ bookings, searchTerm, onRefresh }: Props) => {
+export const EntertainerBookingTable = ({ bookings, searchTerm, statusFilter = 'All', onRefresh }: Props) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const filtered = bookings.filter((b) =>
-    (b.event?.title || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = bookings.filter((b) => {
+    const query = searchTerm.toLowerCase();
+    const matchesSearch = [
+      b.event?.title,
+      b.event?.city,
+      b.event?.venueAddress,
+      b.status,
+    ].some((value) => String(value || '').toLowerCase().includes(query));
+    const matchesStatus = statusFilter === 'All' || b.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
 
   const handleStatus = async (bookingId: string, status: 'accepted' | 'rejected') => {
     setLoadingId(bookingId + status);

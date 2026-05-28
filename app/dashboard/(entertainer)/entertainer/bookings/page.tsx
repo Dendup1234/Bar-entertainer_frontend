@@ -1,16 +1,18 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Filter, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { BookingStatCard } from '../components/BookingStatCard';
 import { EntertainerBookingTable } from '../components/EntertainerBookingTable';
 import { SearchBar } from '../components/SearchBar';
 import { entertainerServices } from '../../../../../src/features/home/services/entertainerServices';
+import { FilterButton, dashboardToolbarStyle } from '@/components/dashboard/DashboardControls';
 
 export default function EntertainerBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [counts, setCounts] = useState({ total: 0, pending: 0, accepted: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Accepted' | 'Rejected'>('All');
 
   useEffect(() => { loadData(); }, []);
 
@@ -18,8 +20,6 @@ export default function EntertainerBookingsPage() {
     setLoading(true);
     try {
       const res = await entertainerServices.getAllBookings();
-      console.log('BOOKINGS RES:', res);
-
       const list: any[] = res?.bookings || res?.data || (Array.isArray(res) ? res : []);
       setBookings(list);
 
@@ -50,20 +50,16 @@ export default function EntertainerBookingsPage() {
         </div>
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
+        <div style={dashboardToolbarStyle}>
           <SearchBar
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search bookings"
           />
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '12px 24px', backgroundColor: '#fff',
-            border: '1px solid #e5e7eb', borderRadius: '9999px',
-            fontSize: '14px', color: '#111827', cursor: 'pointer',
-          }}>
-            <Filter size={16} /> Filter
-          </button>
+          <FilterButton
+            label={statusFilter === 'All' ? 'Filter' : statusFilter}
+            onClick={() => setStatusFilter((current) => current === 'All' ? 'Pending' : current === 'Pending' ? 'Accepted' : current === 'Accepted' ? 'Rejected' : 'All')}
+          />
         </div>
 
         {/* Table */}
@@ -76,6 +72,7 @@ export default function EntertainerBookingsPage() {
           <EntertainerBookingTable
             bookings={bookings}
             searchTerm={searchTerm}
+            statusFilter={statusFilter}
             onRefresh={loadData}
           />
         )}

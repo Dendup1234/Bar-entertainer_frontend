@@ -1,16 +1,19 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Loader2 } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { EventStatCard } from '../components/EventStats';
 import { EventTable } from '../components/EventTable';
 import { EventForm } from '../components/EventForm';
 import { barService } from '@/features/home/services/barServices';
+import { FilterButton, dashboardToolbarStyle } from '@/components/dashboard/DashboardControls';
+import { SearchBar } from '../components/SearchBar';
 
 export default function BarEventsPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [counts, setCounts] = useState({ totalCount: 0, publicCount: 0, privateCount: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [eventTypeFilter, setEventTypeFilter] = useState<'All' | 'Public' | 'Private'>('All');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
@@ -46,31 +49,12 @@ export default function BarEventsPage() {
         </div>
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
-          <div style={{ position: 'relative', width: '340px' }}>
-            <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} size={17} />
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                paddingLeft: '44px',
-                paddingRight: '20px',
-                paddingTop: '12px',
-                paddingBottom: '12px',
-                fontSize: '14px',
-                color: '#111827',
-                caretColor: '#111827',
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '9999px',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
+        <div style={dashboardToolbarStyle}>
+          <SearchBar
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search events"
+          />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
@@ -88,20 +72,10 @@ export default function BarEventsPage() {
             >
               <Plus size={16} /> Add
             </button>
-            <button
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '12px 24px',
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '9999px',
-                fontSize: '14px',
-                color: '#111827',
-                cursor: 'pointer',
-              }}
-            >
-              <Filter size={16} /> Filter
-            </button>
+            <FilterButton
+              label={eventTypeFilter === 'All' ? 'Filter' : eventTypeFilter}
+              onClick={() => setEventTypeFilter((current) => current === 'All' ? 'Public' : current === 'Public' ? 'Private' : 'All')}
+            />
           </div>
         </div>
 
@@ -116,6 +90,7 @@ export default function BarEventsPage() {
             <EventTable
               events={events}
               searchTerm={searchTerm}
+              eventTypeFilter={eventTypeFilter}
               onEdit={(ev) => { setSelectedEvent(ev); setIsFormOpen(true); }}
               onDeactivate={async (id) => { await barService.deactivateEvent(id); loadPageData(); }}
             />

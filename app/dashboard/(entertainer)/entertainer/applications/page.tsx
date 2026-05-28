@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Filter, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { BookingStatCard } from '../components/BookingStatCard';
 import { SearchBar } from '../components/SearchBar';
 import { entertainerServices } from '@/features/home/services/entertainerServices';
+import { FilterButton, dashboardToolbarStyle } from '@/components/dashboard/DashboardControls';
 
 type ApplicationStatus = 'pending' | 'shortlisted' | 'accepted';
 
@@ -67,6 +68,7 @@ export default function EntertainerApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<ApplicationStatus>('shortlisted');
+  const [eventTypeFilter, setEventTypeFilter] = useState<'All' | 'Public' | 'Private'>('All');
 
   useEffect(() => {
     loadApplications();
@@ -103,6 +105,8 @@ export default function EntertainerApplicationsPage() {
     return applications.filter((application) => {
       const event = application.event || {};
       const matchesTab = application.status === activeTab;
+      const eventType = event.isPublic ? 'Public' : 'Private';
+      const matchesType = eventTypeFilter === 'All' || eventType === eventTypeFilter;
       const matchesSearch = [
         event.title,
         event.city,
@@ -110,9 +114,9 @@ export default function EntertainerApplicationsPage() {
         application.status,
       ].some((value) => String(value || '').toLowerCase().includes(query));
 
-      return matchesTab && matchesSearch;
+      return matchesTab && matchesType && matchesSearch;
     });
-  }, [activeTab, applications, searchTerm]);
+  }, [activeTab, applications, eventTypeFilter, searchTerm]);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fff', padding: '40px 48px' }}>
@@ -124,20 +128,16 @@ export default function EntertainerApplicationsPage() {
           <BookingStatCard label="Accepted" value={counts.accepted} />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
+        <div style={dashboardToolbarStyle}>
           <SearchBar
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search applications"
           />
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '12px 24px', backgroundColor: '#fff',
-            border: '1px solid #e5e7eb', borderRadius: '9999px',
-            fontSize: '14px', color: '#111827', cursor: 'pointer',
-          }}>
-            <Filter size={16} /> Filter
-          </button>
+          <FilterButton
+            label={eventTypeFilter === 'All' ? 'Filter' : eventTypeFilter}
+            onClick={() => setEventTypeFilter((current) => current === 'All' ? 'Public' : current === 'Public' ? 'Private' : 'All')}
+          />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '34px', borderBottom: '1px solid #d1d5db', marginBottom: '26px' }}>

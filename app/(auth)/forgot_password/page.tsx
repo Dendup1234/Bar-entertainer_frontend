@@ -20,8 +20,6 @@ const ForgotPasswordPage = () => {
     try {
       // Pass the userType so the service hits the correct endpoint
       await authService.sendResetOtp(userType, email);
-      
-      console.log("OTP Sent to:", email, "for role:", userType);
 
       // Pass both email and role to the verification page
       router.push(`/verify2?email=${encodeURIComponent(email)}&role=${encodeURIComponent(userType)}`);

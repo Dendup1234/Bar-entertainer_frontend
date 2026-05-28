@@ -33,8 +33,6 @@ export default function EntertainerProfilePage() {
             // Requesting entertainer role ensures we get 'stageName', 'bio', etc.
             const role = 'entertainer'; 
             const data = await profileService.getProfile(role, token);
-            
-            console.log("Entertainer API Response:", data);
             setProfile(data.profile || data);
         } catch (err) {
             console.error("Failed to fetch entertainer profile:", err);

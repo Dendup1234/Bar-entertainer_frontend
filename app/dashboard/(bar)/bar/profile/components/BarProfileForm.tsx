@@ -1,19 +1,18 @@
 "use client";
 import React from 'react';
 
+const Field = ({ label, value }: { label: string; value?: string }) => (
+  <div>
+    <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+      {label}
+    </p>
+    <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: '#111827' }}>
+      {value || '—'}
+    </p>
+  </div>
+);
+
 export const BarProfileForm = ({ user, onOpenEdit }: any) => {
-
-  const Field = ({ label, value }: { label: string; value?: string }) => (
-    <div>
-      <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-        {label}
-      </p>
-      <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: '#111827' }}>
-        {value || '—'}
-      </p>
-    </div>
-  );
-
   return (
     <div style={{ backgroundColor: '#fff', padding: '32px' }}>
 
