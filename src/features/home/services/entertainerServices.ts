@@ -16,6 +16,29 @@ export const entertainerServices = {
       method: 'POST',
     });
   },
+
+  getApplications: async (status?: 'pending' | 'shortlisted' | 'accepted' | 'rejected') => {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    return await apiClient(`${ENDPOINTS.ENTERTAINER.FETCH_APPLICATIONS}${query}`);
+  },
+
+  getReviewStats: async () => {
+    return await apiClient(ENDPOINTS.ENTERTAINER.GET_REVIEW_STATS);
+  },
+
+  getReviewProfile: async (
+    eventId: string,
+    params?: { cursorCreatedAt?: string; cursorId?: string; limit?: number },
+  ) => {
+    const searchParams = new URLSearchParams();
+
+    if (params?.cursorCreatedAt) searchParams.set('cursorCreatedAt', params.cursorCreatedAt);
+    if (params?.cursorId) searchParams.set('cursorId', params.cursorId);
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+
+    const query = searchParams.toString();
+    return await apiClient(`${ENDPOINTS.ENTERTAINER.GET_REVIEW_PROFILE(eventId)}${query ? `?${query}` : ''}`);
+  },
   
 
   getAllBookings: async () => {

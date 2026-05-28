@@ -38,8 +38,11 @@ export const ENDPOINTS = {
     FETCH_EVENTS: '/api/entertainer/events',
     GET_EVENT_BY_ID: (id: string) => `/api/entertainer/events/${id}/profile`,
     APPLY_EVENT: (id: string) => `/api/entertainer/events/${id}/apply`,
+    FETCH_APPLICATIONS: '/api/entertainer/applications',
     FETCH_BOOKINGS:'/api/entertainer/bookings',
-    BOOKING_STATUS:(id:string) => `/api/entertainer/bookings/${id}/status`
+    BOOKING_STATUS:(id:string) => `/api/entertainer/bookings/${id}/status`,
+    GET_REVIEW_STATS: '/api/entertainer/reviews/events/stats',
+    GET_REVIEW_PROFILE: (eventId: string) => `/api/entertainer/reviews/${eventId}/profile`
     
   },
 
