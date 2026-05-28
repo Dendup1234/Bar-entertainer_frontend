@@ -52,4 +52,9 @@ export const ENDPOINTS = {
     GET_SAS: (role: string) => `/api/${role}/uploads/sas`,
     CONFIRM: (role: string) => `/api/${role}/uploads/confirm`,
   },
+
+  PUBLIC_REVIEW: {
+    VALIDATE: (token: string) => `/api/bar/reviews/${token}`,
+    SUBMIT: (token: string) => `/api/bar/reviews/${token}/submit`,
+  },
 };
