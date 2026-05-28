@@ -1,7 +1,7 @@
 const DEFAULT_API_BASE_URL =
   process.env.NODE_ENV === 'development'
-    ? 'http://localhost:8000'
-    : 'http://31.97.239.18:9000';
+    ? 'https://bar-entertainer-platform.vercel.app'
+    : '';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
